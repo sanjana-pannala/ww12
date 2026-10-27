@@ -1,3 +1,4 @@
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,6 +15,7 @@ spec:
     spec:
       containers:
         - name: seleniumtestdemoapp1
-          image: bhavyasrip/week12-registrationapp:v1
+          image: sanjana26122005/week12-registrationapp:v1
+          imagePullPolicy: Always
           ports:
             - containerPort: 5000
