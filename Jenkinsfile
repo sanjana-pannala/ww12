@@ -37,6 +37,7 @@ pipeline {
         stage('Docker Login') {
             steps {
                 echo 'Logging in to Docker Hub'
+
                 withCredentials([
                     usernamePassword(
                         credentialsId: 'dockerhub-credentials',
@@ -44,7 +45,7 @@ pipeline {
                         passwordVariable: 'DOCKER_TOKEN'
                     )
                 ]) {
-                    bat 'docker login -u "%DOCKER_USER%" --password-stdin'
+                    bat 'echo %DOCKER_TOKEN% | docker login -u "%DOCKER_USER%" --password-stdin'
                 }
             }
         }
@@ -54,8 +55,18 @@ pipeline {
                 echo 'Tagging Docker image'
                 bat 'docker tag seleniumdemoapp1:v1 sanjana26122005/week12-registrationapp:v1'
 
-                echo 'Pushing Docker image'
+                echo 'Pushing Docker image to Docker Hub'
                 bat 'docker push sanjana26122005/week12-registrationapp:v1'
+            }
+        }
+
+        stage('Check Kubernetes') {
+            steps {
+                echo 'Checking Kubernetes context'
+                bat 'kubectl config current-context'
+
+                echo 'Checking Kubernetes nodes'
+                bat 'kubectl get nodes'
             }
         }
 
@@ -67,7 +78,7 @@ pipeline {
                 echo 'Applying Kubernetes service'
                 bat 'kubectl apply -f service.yaml --validate=false'
 
-                echo 'Checking deployment status'
+                echo 'Waiting for deployment rollout'
                 bat 'kubectl rollout status deployment/kubedemoapp-deployment --timeout=120s'
             }
         }
