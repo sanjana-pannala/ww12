@@ -56,11 +56,9 @@ pipeline {
         stage('Push Docker Image to Docker Hub') {
             steps {
                 echo 'Tagging Docker image'
-
                 bat 'docker tag seleniumdemoapp1:v1 sanjana26122005/week12-registrationapp:v1'
 
                 echo 'Pushing Docker image to Docker Hub'
-
                 bat 'docker push sanjana26122005/week12-registrationapp:v1'
             }
         }
@@ -68,24 +66,25 @@ pipeline {
         stage('Check Kubernetes') {
             steps {
                 echo 'Checking Kubernetes context'
-                bat 'kubectl config current-context'
 
-                echo 'Checking Kubernetes nodes'
-                bat 'kubectl get nodes'
+                withEnv(['KUBECONFIG=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config']) {
+                    bat 'kubectl config current-context'
+                    bat 'kubectl get nodes'
+                }
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
                 echo 'Applying Kubernetes deployment'
-                bat 'kubectl apply -f deployment.yaml --validate=false'
 
-                echo 'Applying Kubernetes service'
-                bat 'kubectl apply -f service.yaml --validate=false'
+                withEnv(['KUBECONFIG=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config']) {
+                    bat 'kubectl apply -f deployment.yaml --validate=false'
+                    bat 'kubectl apply -f service.yaml --validate=false'
 
-                echo 'Waiting for deployment rollout'
-
-                bat 'kubectl rollout status deployment/seleniumtestdemoapp1-deployment --timeout=120s'
+                    echo 'Waiting for deployment rollout'
+                    bat 'kubectl rollout status deployment/seleniumtestdemoapp1-deployment --timeout=120s'
+                }
             }
         }
     }
