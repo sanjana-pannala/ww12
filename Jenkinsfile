@@ -3,7 +3,6 @@ pipeline {
     agent any
 
     stages {
-
         stage('Checkout SCM') {
             steps {
                 echo 'Checking out source code'
@@ -45,7 +44,7 @@ pipeline {
                         passwordVariable: 'DOCKER_TOKEN'
                     )
                 ]) {
-                    bat 'echo %DOCKER_TOKEN% | docker login -u "%DOCKER_USER%" --password-stdin'
+                    bat '@echo off & docker login -u "%DOCKER_USER%" --password-stdin'
                 }
             }
         }
@@ -79,7 +78,7 @@ pipeline {
                 bat 'kubectl apply -f service.yaml --validate=false'
 
                 echo 'Waiting for deployment rollout'
-                bat 'kubectl rollout status deployment/kubedemoapp-deployment --timeout=120s'
+                bat 'kubectl rollout status deployment/seleniumtestdemoapp1-deployment --timeout=120s'
             }
         }
     }
