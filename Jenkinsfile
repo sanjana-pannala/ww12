@@ -3,6 +3,7 @@ pipeline {
     agent any
 
     stages {
+
         stage('Checkout SCM') {
             steps {
                 echo 'Checking out source code'
@@ -44,7 +45,10 @@ pipeline {
                         passwordVariable: 'DOCKER_TOKEN'
                     )
                 ]) {
-                    bat '@echo off & docker login -u "%DOCKER_USER%" --password-stdin'
+                    bat '''
+                        @echo off
+                        docker login -u "%DOCKER_USER%" --password-stdin < nul
+                    ''' 
                 }
             }
         }
@@ -55,7 +59,20 @@ pipeline {
                 bat 'docker tag seleniumdemoapp1:v1 sanjana26122005/week12-registrationapp:v1'
 
                 echo 'Pushing Docker image to Docker Hub'
-                bat 'docker push sanjana26122005/week12-registrationapp:v1'
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_TOKEN'
+                    )
+                ]) {
+                    bat '''
+                        @echo off
+                        echo %DOCKER_TOKEN% | docker login -u "%DOCKER_USER%" --password-stdin
+                        if errorlevel 1 exit /b 1
+                        docker push sanjana26122005/week12-registrationapp:v1
+                    '''
+                }
             }
         }
 
