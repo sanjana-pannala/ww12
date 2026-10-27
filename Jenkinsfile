@@ -1,51 +1,74 @@
+
 pipeline {
     agent any
 
     stages {
+
+        stage('Checkout SCM') {
+            steps {
+                echo 'Checking out source code'
+                checkout scm
+            }
+        }
+
         stage('Run Selenium Tests with pytest') {
-    steps {
-        echo "Running Selenium Tests using pytest"
+            steps {
+                echo 'Installing Python dependencies'
+                bat 'python -m pip install -r requirements.txt'
 
-        // 1. Install dependencies
-        bat 'pip install -r requirements.txt'
+                echo 'Starting Flask application'
+                bat 'start /B python app.py'
 
-        // 2. Start Flask app in the background
-        bat 'start /B python app.py'
+                echo 'Waiting for Flask application'
+                sleep time: 5, unit: 'SECONDS'
 
-        // 3. Built-in sleep (avoids "ping not recognized" or "null" exit codes)
-        sleep time: 5, unit: 'SECONDS'
-
-        // 4. Run pytest
-        bat 'pytest -v'
-    }
-}
+                echo 'Running Selenium tests'
+                bat 'python -m pytest -v'
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
-                echo "Build Docker Image"
-                bat "docker build -t seleniumdemoapp1:v1 ."
+                echo 'Building Docker image'
+                bat 'docker build -t seleniumdemoapp1:v1 .'
             }
         }
 
         stage('Docker Login') {
             steps {
-                bat 'docker login -u sanjana26122005 -p Sanjana@12'
+                echo 'Logging in to Docker Hub'
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_TOKEN'
+                    )
+                ]) {
+                    bat 'docker login -u "%DOCKER_USER%" --password-stdin'
+                }
             }
         }
 
         stage('Push Docker Image to Docker Hub') {
             steps {
-                echo "Push Docker Image to Docker Hub"
-                bat "docker tag seleniumdemoapp:v1 sanjana26122005/week12-registrationapp:v1"
-                bat "docker push sanjana26122005/week12-registrationapp:v1"
+                echo 'Tagging Docker image'
+                bat 'docker tag seleniumdemoapp1:v1 sanjana26122005/week12-registrationapp:v1'
+
+                echo 'Pushing Docker image'
+                bat 'docker push sanjana26122005/week12-registrationapp:v1'
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                // apply deployment & service
+                echo 'Applying Kubernetes deployment'
                 bat 'kubectl apply -f deployment.yaml --validate=false'
-                bat 'kubectl apply -f service.yaml'
+
+                echo 'Applying Kubernetes service'
+                bat 'kubectl apply -f service.yaml --validate=false'
+
+                echo 'Checking deployment status'
+                bat 'kubectl rollout status deployment/kubedemoapp-deployment --timeout=120s'
             }
         }
     }
@@ -54,8 +77,13 @@ pipeline {
         success {
             echo 'Pipeline completed successfully!'
         }
+
         failure {
-            echo 'Pipeline failed. Please check the logs.'
+            echo 'Pipeline failed. Please check the console logs.'
+        }
+
+        always {
+            echo 'Jenkins pipeline execution finished.'
         }
     }
 }
