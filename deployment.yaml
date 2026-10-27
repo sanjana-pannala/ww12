@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seleniumtestdemoapp1-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seleniumtestdemoapp1
+  template:
+    metadata:
+      labels:
+        app: seleniumtestdemoapp1
+    spec:
+      containers:
+        - name: seleniumtestdemoapp1
+          image: bhavyasrip/week12-registrationapp:v1
+          ports:
+            - containerPort: 5000

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Registration Form</title>
+</head>
+<body>
+    <center>
+        <h2>Registration Form</h2>
+
+        <form action="/submit" method="POST"
+            onsubmit="return validateForm()">
+            <label>Username:</label>
+            <input type="text" name="username" id="username">
+            <br><br>
+            <label>Password:</label>
+            <input type="password" name="pwd" id="pwd">
+            <br><br>
+            <button type="submit" name="sb">Submit</button>
+        </form>
+    </center>
+
+    <script>
+        function validateForm() {
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("pwd").value;
+
+            if (username === "") {
+                alert("Username cannot be empty.");
+                return false;
+            }
+
+            if (password === "") {
+                alert("Password cannot be empty.");
+                return false;
+            }
+
+            if (password.length < 6) {
+                alert("Password must be at least 6 characters long.");
+                return false;
+            }
+
+            return true;
+        }
+    </script>
+</body>
+</html>
