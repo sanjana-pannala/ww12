@@ -1,67 +1,30 @@
 
-pipeline {
-    agent any
+from flask import Flask, render_template, request
 
-    stages {
-        stage('Run Selenium Tests with pytest') {
-            steps {
-                echo 'Running Selenium Tests using pytest'
+app = Flask(__name__)
 
-                bat 'python -m pip install -r requirements.txt'
 
-                bat 'start /B python app.py'
+@app.route("/", methods=["GET"])
+def register():
+    return render_template("register.html")
 
-                sleep time: 5, unit: 'SECONDS'
 
-                bat 'python -m pytest -v'
-            }
-        }
+@app.route("/submit", methods=["POST"])
+def submit():
+    username = request.form.get("username", "")
+    password = request.form.get("pwd", "")
 
-        stage('Build Docker Image') {
-            steps {
-                echo 'Building Docker Image'
-                bat 'docker build -t sanjana26122005/week12-registrationapp:v1 .'
-            }
-        }
+    if not username.strip():
+        return "Username is required", 400
 
-        stage('Docker Login') {
-            steps {
-                echo 'Logging in to Docker Hub'
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    bat 'docker login -u %DOCKER_USER% -p %DOCKER_PASS%'
-                }
-            }
-        }
+    if not password:
+        return "Password is required", 400
 
-        stage('Push Docker Image to Docker Hub') {
-            steps {
-                echo 'Pushing Docker Image to Docker Hub'
-                bat 'docker push sanjana26122005/week12-registrationapp:v1'
-            }
-        }
+    if len(password) < 6:
+        return "Password must be at least 6 characters", 400
 
-        stage('Deploy to Kubernetes') {
-            steps {
-                echo 'Deploying application to Kubernetes'
-                bat 'kubectl apply -f deployment.yaml --validate=false'
-                bat 'kubectl apply -f service.yaml --validate=false'
-            }
-        }
-    }
+    return f"Hello, {username}! Welcome to the website"
 
-    post {
-        success {
-            echo 'Pipeline completed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed. Please check the logs.'
-        }
-        always {
-            echo 'Jenkins pipeline execution finished.'
-        }
-    }
-}
+
+if __name__ == "__main__":
+    app.run(host="127.0.0.1", port=5000, debug=True)
