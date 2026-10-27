@@ -1,4 +1,4 @@
-```python
+
 from flask import Flask, render_template, request
 
 app = Flask(__name__)
@@ -11,7 +11,7 @@ def register():
 
 @app.route("/submit", methods=["POST"])
 def submit():
-    username = request.form.get("username", "User")
+    username = request.form.get("username", "")
     password = request.form.get("pwd", "")
 
     if not username.strip():
@@ -27,5 +27,4 @@ def submit():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
-```
+    app.run(host="127.0.0.1", port=5000, debug=True)
